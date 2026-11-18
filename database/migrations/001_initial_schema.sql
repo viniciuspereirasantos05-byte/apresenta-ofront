@@ -1,6 +1,5 @@
 -- Kennedy Labs: primeira estrutura relacional.
 -- PostgreSQL 15+. Não inclui usuários reais nem credenciais.
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE app_settings (
   setting_key TEXT PRIMARY KEY,
