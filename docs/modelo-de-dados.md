@@ -24,7 +24,7 @@ O backend também deverá verificar bloqueios de calendário, estado da conta, a
 
 ## Aplicação da migração
 
-Quando o PostgreSQL estiver instalado no computador autorizado, a migração será aplicada pelo terminal com uma ferramenta própria do projeto. Não execute o SQL manualmente ainda. Antes, vamos criar e testar a conexão do backend e a rotina de migrações.
+O projeto já inclui um executor de migrações em `backend/src/migrate.js`. Quando o PostgreSQL estiver instalado e o banco local criado, entre na pasta `backend`, configure `.env` a partir de `.env.example` e execute `npm run db:migrate`. O executor registra migrações aplicadas em `schema_migrations` e não as repete.
 
 ## Decisões ainda pendentes
 
