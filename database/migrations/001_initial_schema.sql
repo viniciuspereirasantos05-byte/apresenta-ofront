@@ -81,9 +81,12 @@ CREATE TABLE reservation_slots (
   space_id UUID NOT NULL REFERENCES spaces(id),
   reservation_date DATE NOT NULL,
   lesson_period_id UUID NOT NULL REFERENCES lesson_periods(id),
-  UNIQUE (space_id, reservation_date, lesson_period_id),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   UNIQUE (reservation_id, lesson_period_id)
 );
+CREATE UNIQUE INDEX reservation_slots_active_space_period_uq
+  ON reservation_slots (space_id, reservation_date, lesson_period_id)
+  WHERE is_active = TRUE;
 CREATE INDEX reservation_slots_date_idx ON reservation_slots (reservation_date);
 CREATE INDEX reservations_teacher_idx ON reservations (teacher_id, created_at DESC);
 
