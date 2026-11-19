@@ -185,6 +185,8 @@ router.post("/reservations", requireCsrf, async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
+    // Serializa reservas e bloqueios da mesma data para evitar corrida entre as duas operações.
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [date]);
 
     const space = await client.query(
       "SELECT id FROM spaces WHERE id = $1 AND active = TRUE FOR SHARE",
