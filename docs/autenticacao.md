@@ -7,7 +7,7 @@
 - A lista de domínios institucionais pode ser configurada por `ALLOWED_EMAIL_DOMAINS`; enquanto estiver vazia, a validação verifica apenas o formato do e-mail. O domínio oficial da escola ainda precisa ser confirmado.
 - Senhas são armazenadas com Argon2id, nunca em texto puro.
 - Login libera somente contas com estado `active`.
-- Sessões ficam no PostgreSQL, com cookie HTTP-only, SameSite=Lax e Secure em produção.
+- Sessões ficam no PostgreSQL, com cookie HTTP-only, SameSite configurável e Secure em produção. Se frontend e API ficarem em sites diferentes, avaliar `SESSION_COOKIE_SAME_SITE=none` somente com HTTPS e `NODE_ENV=production`.
 - Rotas que alteram estado exigem token CSRF.
 - Cadastro e login têm limite de tentativas.
 - A rota `GET /api/auth/me` consulta o estado atual da conta no banco.
@@ -30,6 +30,7 @@ Copie `.env.example` para `.env` e configure:
 - `DATABASE_URL`: conexão PostgreSQL.
 - `SESSION_SECRET`: segredo aleatório forte, com pelo menos 32 caracteres. Nunca versionar ou compartilhar.
 - `CORS_ORIGIN`: origens exatas permitidas, separadas por vírgula.
+- `SESSION_COOKIE_SAME_SITE`: `lax` por padrão; `none` exige HTTPS e modo de produção.
 - `ALLOWED_EMAIL_DOMAINS`: domínio institucional confirmado pela escola, sem `@`. Não inventar o domínio.
 
 Em produção, servir tudo por HTTPS e definir `NODE_ENV=production`.
