@@ -29,8 +29,9 @@ async function updateTeacherStatus(req, res, next, nextStatus) {
     return res.status(400).json({ error: "Identificador de professor inválido." });
   }
 
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
     const result = await client.query(
       `UPDATE users
@@ -78,7 +79,7 @@ async function updateTeacherStatus(req, res, next, nextStatus) {
     await client.query("ROLLBACK").catch(() => {});
     return next(error);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 
