@@ -6,7 +6,7 @@ Sistema web responsivo para organizar reservas dos laboratórios e do auditório
 
 ## Estrutura do repositório
 
-- `frontend/`: interface web (HTML, CSS e JavaScript).
+- `frontend/`: interface web (HTML, CSS e JavaScript), manifesto e service worker para PWA instalável.
 - `backend/`: API Node.js + Express.
 - `database/migrations/`: migrações SQL do PostgreSQL.
 - `docs/`: arquitetura, modelo de dados e decisões do projeto.
