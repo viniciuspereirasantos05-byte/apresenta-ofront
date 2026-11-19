@@ -75,8 +75,8 @@
   }
   async function loadBlockOptions() {
     const [spaceData, periodData] = await Promise.all([
-      request("/api/teacher/spaces").catch(() => ({ spaces: [] })),
-      request("/api/teacher/periods").catch(() => ({ periods: [] }))
+      request("/api/admin/spaces").catch(() => ({ spaces: [] })),
+      request("/api/admin/periods").catch(() => ({ periods: [] }))
     ]);
     const spaces = $("#block-space");
     const periods = $("#block-period");
