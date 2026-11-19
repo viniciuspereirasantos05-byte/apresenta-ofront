@@ -138,6 +138,7 @@ router.post("/calendar-blocks", requireCsrf, async (req, res, next) => {
   const spaceId = req.body.spaceId || null;
   const periodId = req.body.periodId || null;
   const reason = String(req.body.reason || "").trim();
+  const confirmExistingReservations = req.body.confirmExistingReservations === true;
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!datePattern.test(date) ||
@@ -168,18 +169,43 @@ router.post("/calendar-blocks", requireCsrf, async (req, res, next) => {
         return res.status(404).json({ error: "Período não encontrado." });
       }
     }
+    const affected = await client.query(
+      "SELECT DISTINCT r.teacher_id FROM reservation_slots rs " +
+      "JOIN reservations r ON r.id = rs.reservation_id " +
+      "WHERE rs.reservation_date = $1 AND rs.is_active = TRUE AND r.status = 'confirmed' " +
+      "AND ($2::uuid IS NULL OR rs.space_id = $2) " +
+      "AND ($3::uuid IS NULL OR rs.lesson_period_id = $3)",
+      [date, spaceId, periodId]
+    );
+    if (affected.rowCount > 0 && !confirmExistingReservations) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: "Este bloqueio afeta reservas já confirmadas.",
+        warning: true,
+        affectedTeachers: affected.rowCount,
+        message: "Confirme novamente para criar o bloqueio e avisar os professores afetados."
+      });
+    }
+
     const inserted = await client.query(
       "INSERT INTO calendar_blocks (created_by, space_id, block_date, lesson_period_id, reason) " +
       "VALUES ($1, $2, $3, $4, $5) RETURNING id, block_date, space_id, lesson_period_id, reason",
       [req.session.user.id, spaceId, date, periodId, reason]
     );
+    for (const affectedTeacher of affected.rows) {
+      await client.query(
+        "INSERT INTO notifications (user_id, title, message) VALUES ($1, $2, $3)",
+        [affectedTeacher.teacher_id, "Reserva afetada por bloqueio", 
+          "A secretaria criou um bloqueio que pode afetar uma de suas reservas em " + date + ". Entre em contato com a secretaria para combinar os próximos passos."]
+      );
+    }
     await client.query(
       "INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, details) " +
       "VALUES ($1, 'calendar_block.created', 'calendar_block', $2, $3::jsonb)",
-      [req.session.user.id, inserted.rows[0].id, JSON.stringify({ date, spaceId, periodId, reason })]
+      [req.session.user.id, inserted.rows[0].id, JSON.stringify({ date, spaceId, periodId, reason, affectedTeachers: affected.rowCount })]
     );
     await client.query("COMMIT");
-    return res.status(201).json({ message: "Bloqueio criado.", block: inserted.rows[0] });
+    return res.status(201).json({ message: affected.rowCount > 0 ? "Bloqueio criado. Os professores afetados receberam um aviso interno." : "Bloqueio criado.", block: inserted.rows[0], affectedTeachers: affected.rowCount });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
