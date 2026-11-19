@@ -6,6 +6,7 @@ const PgSession = require("connect-pg-simple")(session);
 const { getPool } = require("./database");
 const authRouter = require("./routes/auth");
 const adminRouter = require("./routes/admin");
+const setupRouter = require("./routes/setup");
 
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
@@ -85,6 +86,7 @@ app.get("/api/health/database", async (_req, res, next) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/setup", setupRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada." });
