@@ -63,10 +63,8 @@
         headers: { "x-csrf-token": csrfToken },
         body: JSON.stringify({ email: form.get("email"), password: form.get("password") })
       });
-      showNotice("Login realizado. A próxima etapa será conectar o painel da sua conta.");
       loginForm.reset();
-      await refreshCsrf();
-      console.info("Sessão iniciada para perfil:", data.user.role);
+      window.location.href = data.user.role === "admin" ? "./admin.html" : "./teacher.html";
     } catch (error) {
       showNotice(error.message, true);
     } finally {
