@@ -21,6 +21,9 @@
 | POST | `/api/auth/login` | Autentica conta ativa |
 | GET | `/api/auth/me` | Consulta sessão atual |
 | POST | `/api/auth/logout` | Encerra sessão |
+| GET | `/api/admin/teachers/pending` | Lista cadastros pendentes (admin) |
+| POST | `/api/admin/teachers/:teacherId/approve` | Aprova professor (admin) |
+| POST | `/api/admin/teachers/:teacherId/reject` | Rejeita cadastro (admin) |
 
 Para `POST /register`, enviar `fullName`, `email`, `recoveryEmail` (opcional) e `password` em JSON, junto do cookie de sessão e do cabeçalho `x-csrf-token`. O login também exige o token CSRF. Clientes web devem enviar credenciais/cookies nas chamadas à API.
 
@@ -38,7 +41,7 @@ Em produção, servir tudo por HTTPS e definir `NODE_ENV=production`.
 ## Ainda não implementado
 
 - Provisionamento seguro do primeiro administrador.
-- Aprovação/rejeição de cadastros por administradores.
+- Provisionamento seguro do primeiro administrador; as rotas de aprovação/rejeição já estão preparadas, mas aguardam a criação segura de uma conta administrativa.
 - Verificação de e-mail e fluxo de recuperação de senha.
 - Segundo fator obrigatório para administradores após ativação do sistema.
 - Formulário completo de disciplinas e turmas do professor.
