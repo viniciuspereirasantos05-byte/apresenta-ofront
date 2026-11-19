@@ -12,6 +12,14 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const sameSite = (process.env.SESSION_COOKIE_SAME_SITE || "lax").toLowerCase();
+
+if (!["lax", "strict", "none"].includes(sameSite)) {
+  throw new Error("SESSION_COOKIE_SAME_SITE deve ser lax, strict ou none.");
+}
+if (sameSite === "none" && !isProduction) {
+  throw new Error("SameSite=None exige HTTPS e NODE_ENV=production.");
+}
 
 if (isProduction) app.set("trust proxy", 1);
 
@@ -49,7 +57,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "lax",
+    sameSite,
     maxAge: sessionMaxAgeHours * 60 * 60 * 1000
   }
 }));
