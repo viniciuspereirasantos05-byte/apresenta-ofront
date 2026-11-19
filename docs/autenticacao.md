@@ -48,12 +48,10 @@ Em produção, servir tudo por HTTPS e definir `NODE_ENV=production`.
 
 ## Ainda não implementado
 
-- Provisionamento seguro do primeiro administrador.
 - Interface guiada para provisionar o primeiro administrador durante a implantação; a rota protegida de criação única já está preparada.
 - Testes automatizados e teste integrado com PostgreSQL.
 - Verificação de e-mail e fluxo de recuperação de senha.
 - Segundo fator obrigatório para administradores após ativação do sistema.
 - Formulário completo de disciplinas e turmas do professor.
-- Testes automatizados e teste integrado com PostgreSQL.
 
-Não criar contas administrativas padrão nem colocar senhas ou segredos no repositório. O fluxo de bootstrap administrativo será implementado após validar com a escola quem terá autoridade para ativar o sistema.
+Não criar contas administrativas padrão nem colocar senhas ou segredos no repositório. O uso da rota de bootstrap deve ocorrer somente após validar com a escola quem terá autoridade para criar a primeira conta administrativa.
