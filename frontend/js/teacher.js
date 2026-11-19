@@ -92,18 +92,19 @@
   async function loadAvailability() {
     const date = $("#booking-date").value;
     const spaceId = $("#booking-space").value;
-    if (!date || !spaceId) {
+    const classShift = $("#booking-class").selectedOptions[0]?.dataset.shift || "";
+    if (!date || !spaceId || !classShift) {
       renderPeriods([]);
       const help = document.createElement("p");
       help.className = "form-help";
-      help.textContent = "Escolha uma data e um espaço para consultar os períodos.";
+      help.textContent = "Escolha uma data, um espaço e uma turma para consultar os períodos.";
       periodList.replaceChildren(help);
       return;
     }
     periodList.textContent = "Consultando disponibilidade...";
     try {
       const data = await request("/api/teacher/availability?date=" + encodeURIComponent(date) + "&spaceId=" + encodeURIComponent(spaceId));
-      periods = data.periods;
+      periods = data.periods.filter((period) => period.shift === classShift);
       renderPeriods(periods);
     } catch (error) {
       periodList.textContent = error.message;
@@ -158,7 +159,7 @@
     addOption(spaceSelect, "", "Selecione um espaço");
     addOption(classSelect, "", "Selecione uma turma");
     spaceData.spaces.forEach((space) => addOption(spaceSelect, space.id, space.name));
-    classData.classGroups.forEach((group) => addOption(classSelect, group.id, group.name));
+    classData.classGroups.forEach((group) => { addOption(classSelect, group.id, group.name); classSelect.lastElementChild.dataset.shift = group.shift; });
     if (!spaceData.spaces.length || !classData.classGroups.length) {
       showNotice("A secretaria ainda precisa cadastrar os espaços ou as turmas antes de liberar reservas.");
     }
@@ -181,6 +182,7 @@
 
   $("#booking-date").addEventListener("change", loadAvailability);
   $("#booking-space").addEventListener("change", loadAvailability);
+  $("#booking-class").addEventListener("change", loadAvailability);
   $("#refresh-availability").addEventListener("click", loadAvailability);
   $("#refresh-reservations").addEventListener("click", loadReservations);
 
