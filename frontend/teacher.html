@@ -9,8 +9,26 @@
 <body>
   <header class="topbar"><a class="brand" href="./"><span class="brand-mark">K</span><span>Kennedy <strong>Labs</strong></span></a><button id="logout" class="secondary-button top-logout" type="button">Sair</button></header>
   <main class="dashboard">
-    <p class="eyebrow">ÁREA DO PROFESSOR</p><h1>Bem-vindo ao Kennedy Labs.</h1>
-    <section class="list-card"><h2 id="teacher-name">Sua área de trabalho</h2><p class="intro">Estamos preparando a consulta de horários e as reservas dos espaços escolares. Em breve você poderá solicitar laboratórios e o auditório por aqui.</p><div class="status"><span class="status-dot"></span> Painel inicial conectado</div></section>
+    <p class="eyebrow">ÁREA DO PROFESSOR</p><h1 id="welcome-title">Bem-vindo ao Kennedy Labs.</h1>
+    <p class="intro">Consulte os espaços e organize suas aulas práticas.</p>
+    <div id="teacher-notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <section class="list-card booking-card">
+      <div class="list-heading"><h2>Nova reserva</h2><span class="form-help">A confirmação é automática quando todos os períodos estão livres.</span></div>
+      <form id="reservation-form" class="booking-form">
+        <div class="booking-fields">
+          <div><label for="booking-date">Data</label><input id="booking-date" name="date" type="date" required></div>
+          <div><label for="booking-space">Espaço</label><select id="booking-space" name="spaceId" required><option value="">Carregando espaços...</option></select></div>
+          <div><label for="booking-class">Turma</label><select id="booking-class" name="classGroupId" required><option value="">Carregando turmas...</option></select></div>
+        </div>
+        <div><label for="booking-purpose">Finalidade da aula</label><input id="booking-purpose" name="purpose" type="text" maxlength="500" minlength="3" placeholder="Ex.: atividade prática de programação" required></div>
+        <div class="period-picker"><div class="list-heading"><h3>Períodos disponíveis</h3><button id="refresh-availability" class="secondary-button" type="button">Atualizar</button></div><div id="period-list" class="period-list"><p class="form-help">Escolha uma data e um espaço.</p></div></div>
+        <button class="primary-button" id="submit-reservation" type="submit">Confirmar reserva</button>
+      </form>
+    </section>
+    <section class="list-card reservation-history">
+      <div class="list-heading"><h2>Minhas reservas</h2><button id="refresh-reservations" class="secondary-button" type="button">Atualizar</button></div>
+      <div id="reservation-list"><p class="form-help">Carregando histórico...</p></div>
+    </section>
   </main>
   <footer>Kennedy Labs · Área do professor</footer>
 </body>
