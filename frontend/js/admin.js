@@ -12,7 +12,7 @@
       headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) }
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Não foi possível concluir a operação.");
+    if (!response.ok) { const error = new Error(data.error || "Não foi possível concluir a operação."); error.data = data; throw error; }
     return data;
   }
   async function refreshCsrf() { csrfToken = (await request("/api/auth/csrf")).csrfToken; }
@@ -159,7 +159,32 @@
         message(result.message);
         $("#block-reason").value = "";
         await loadBlocks();
-      } catch (error) { message(error.message, true); }
+      } catch (error) {
+        if (error.data?.warning && window.confirm(
+          error.message + " Quantidade de professores afetados: " + error.data.affectedTeachers +
+          ". Deseja criar o bloqueio e enviar avisos internos?"
+        )) {
+          try {
+            await refreshCsrf();
+            const confirmed = await request("/api/admin/calendar-blocks", {
+              method: "POST",
+              headers: { "x-csrf-token": csrfToken },
+              body: JSON.stringify({
+                date: $("#block-date").value,
+                spaceId: $("#block-space").value || null,
+                periodId: $("#block-period").value || null,
+                reason: $("#block-reason").value,
+                confirmExistingReservations: true
+              })
+            });
+            message(confirmed.message);
+            $("#block-reason").value = "";
+            await loadBlocks();
+          } catch (confirmError) { message(confirmError.message, true); }
+        } else {
+          message(error.message, true);
+        }
+      }
       finally { button.disabled = false; }
     });
     $("#refresh-blocks").addEventListener("click", loadBlocks);
