@@ -98,3 +98,12 @@ select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(139,207,121,
 .reservation-status { justify-self:start; margin-top:5px; padding:5px 9px; border:1px solid #536054; border-radius:20px; color:#c3cec4; font-size:.75rem; }
 .reservation-status.is-confirmed { border-color:#527d54; color:var(--green); }
 @media(max-width:700px) { .booking-fields { grid-template-columns:1fr; } }
+
+.admin-blocks { margin-top:24px; }
+.admin-blocks .booking-form { margin:20px 0 26px; }
+.block-list { display:grid; }
+.block-card { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:15px 0; border-top:1px solid var(--surface-border); }
+.block-card strong { font-size:.9rem; }
+.block-card p { margin:6px 0 0; color:var(--muted); font-size:.83rem; }
+.block-card .secondary-button { margin:0; min-height:38px; }
+@media(max-width:560px) { .block-card { align-items:flex-start; flex-direction:column; } }
