@@ -155,6 +155,8 @@ router.post("/calendar-blocks", requireCsrf, async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
+    // Usa o mesmo bloqueio consultivo da criação de reservas para a data.
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [date]);
     if (spaceId) {
       const space = await client.query("SELECT id FROM spaces WHERE id = $1 FOR SHARE", [spaceId]);
       if (!space.rowCount) {
