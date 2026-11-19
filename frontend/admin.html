@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101510"><title>Administração | Kennedy Labs</title>
+  <link rel="stylesheet" href="./css/styles.css">
+  <script src="./js/config.js" defer></script><script src="./js/admin.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="./"><span class="brand-mark">K</span><span>Kennedy <strong>Labs</strong></span></a><button id="logout" class="secondary-button top-logout" type="button">Sair</button></header>
+  <main class="dashboard">
+    <div class="dashboard-heading"><div><p class="eyebrow">ÁREA ADMINISTRATIVA</p><h1>Painel da secretaria</h1><p class="intro">Acompanhe os cadastros de professores que aguardam aprovação.</p></div><div class="count-card"><strong id="pending-count">—</strong><span>cadastros pendentes</span></div></div>
+    <div id="dashboard-notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <section class="list-card"><div class="list-heading"><h2>Solicitações de acesso</h2><button id="refresh" class="secondary-button" type="button">Atualizar lista</button></div><div id="pending-list"><p class="form-help">Carregando cadastros...</p></div></section>
+  </main>
+  <footer>Kennedy Labs · Administração</footer>
+</body>
+</html>
