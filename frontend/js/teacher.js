@@ -137,6 +137,52 @@
     });
   }
 
+
+  async function loadNotifications() {
+    const container = $("#notification-list");
+    container.textContent = "Carregando avisos...";
+    try {
+      const data = await request("/api/teacher/notifications");
+      container.replaceChildren();
+      if (!data.notifications.length) {
+        const empty = document.createElement("p");
+        empty.className = "form-help";
+        empty.textContent = "Você não possui avisos no momento.";
+        container.append(empty);
+        return;
+      }
+      data.notifications.forEach((item) => {
+        const card = document.createElement("article");
+        card.className = "notification-item" + (item.read_at ? "" : " is-unread");
+        const title = document.createElement("strong");
+        title.textContent = item.title;
+        const body = document.createElement("p");
+        body.textContent = item.message;
+        const date = document.createElement("small");
+        date.textContent = new Date(item.created_at).toLocaleString("pt-BR");
+        card.append(title, body, date);
+        if (!item.read_at) {
+          const read = document.createElement("button");
+          read.type = "button";
+          read.className = "secondary-button";
+          read.textContent = "Marcar como lido";
+          read.addEventListener("click", async () => {
+            read.disabled = true;
+            try {
+              await refreshCsrf();
+              await request("/api/teacher/notifications/" + encodeURIComponent(item.id) + "/read", {
+                method: "POST", headers: { "x-csrf-token": csrfToken }, body: JSON.stringify({})
+              });
+              await loadNotifications();
+            } catch (error) { showNotice(error.message, true); }
+          });
+          card.append(read);
+        }
+        container.append(card);
+      });
+    } catch (error) { container.textContent = error.message; }
+  }
+
   async function loadReservations() {
     reservationList.textContent = "Carregando histórico...";
     try {
@@ -174,6 +220,7 @@
       const periodData = await request("/api/teacher/periods");
       periods = periodData.periods;
       await loadReservations();
+      await loadNotifications();
       await loadAvailability();
     } catch (_error) {
       window.location.href = "./";
@@ -185,6 +232,7 @@
   $("#booking-class").addEventListener("change", loadAvailability);
   $("#refresh-availability").addEventListener("click", loadAvailability);
   $("#refresh-reservations").addEventListener("click", loadReservations);
+  $("#refresh-notifications").addEventListener("click", loadNotifications);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
