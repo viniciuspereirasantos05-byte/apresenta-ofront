@@ -27,7 +27,7 @@ Sistema web responsivo para organizar reservas dos laboratórios e do auditório
 
 ### Criar o banco
 
-Crie um banco vazio chamado `kennedy_labs). Depois, na pasta `backend`, execute:
+Crie um banco vazio chamado `kennedy_labs`. Depois, na pasta `backend`, execute:
 
 ```bash
 npm run db:migrate
@@ -53,6 +53,9 @@ Rotas iniciais de autenticação:
 - `POST /api/auth/login`: autentica conta ativa.
 - `GET /api/auth/me`: consulta a sessão atual.
 - `POST /api/auth/logout`: encerra a sessão.
+- `GET /api/admin/teachers/pending`: lista cadastros pendentes (somente administradores).
+- `POST /api/admin/teachers/:teacherId/approve`: aprova cadastro (somente administradores).
+- `POST /api/admin/teachers/:teacherId/reject`: rejeita cadastro (somente administradores).
 
 As rotas de cadastro/login exigem o token CSRF no cabeçalho `x-csrf-token` e o envio dos cookies. Consulte [documentação de autenticação](docs/autenticacao.md) para o contrato das rotas.
 
@@ -68,7 +71,7 @@ As rotas de cadastro/login exigem o token CSRF no cabeçalho `x-csrf-token` e o 
 
 ## Estado do projeto
 
-A fundação do backend, o modelo inicial do banco e a primeira etapa de autenticação estão preparados. Ainda faltam provisionamento seguro do primeiro administrador, aprovação administrativa, verificação e recuperação de e-mail, segundo fator, reservas, interface completa, testes automatizados e implantação.
+A fundação do backend, o modelo inicial do banco e a primeira etapa de autenticação estão preparados. A primeira versão das rotas de aprovação administrativa foi adicionada. Ainda faltam provisionamento seguro do primeiro administrador, verificação e recuperação de e-mail, segundo fator, reservas, interface completa, testes automatizados e implantação.
 
 ## Documentação
 
