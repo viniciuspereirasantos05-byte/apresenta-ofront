@@ -11,7 +11,7 @@ router.use(requireAuthenticated, requireAdmin);
 router.get("/teachers/pending", async (_req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id, full_name, email, recovery_email, created_at
+      `SELECT id, full_name, email, created_at
        FROM users
        WHERE role = 'teacher' AND account_status = 'pending'
        ORDER BY created_at ASC`
