@@ -13,6 +13,20 @@
     <div class="dashboard-heading"><div><p class="eyebrow">ÁREA ADMINISTRATIVA</p><h1>Painel da secretaria</h1><p class="intro">Acompanhe os cadastros de professores que aguardam aprovação.</p></div><div class="count-card"><strong id="pending-count">—</strong><span>cadastros pendentes</span></div></div>
     <div id="dashboard-notice" class="notice" role="status" aria-live="polite" hidden></div>
     <section class="list-card"><div class="list-heading"><h2>Solicitações de acesso</h2><button id="refresh" class="secondary-button" type="button">Atualizar lista</button></div><div id="pending-list"><p class="form-help">Carregando cadastros...</p></div></section>
+    <section class="list-card admin-blocks">
+      <div class="list-heading"><h2>Bloqueios do calendário</h2><button id="refresh-blocks" class="secondary-button" type="button">Atualizar</button></div>
+      <p class="form-help">Bloqueie um dia inteiro, um espaço ou um período. Um bloqueio impede novas reservas que coincidam com ele.</p>
+      <form id="block-form" class="booking-form">
+        <div class="booking-fields">
+          <div><label for="block-date">Data</label><input id="block-date" type="date" required></div>
+          <div><label for="block-space">Espaço</label><select id="block-space"><option value="">Todos os espaços</option></select></div>
+          <div><label for="block-period">Período</label><select id="block-period"><option value="">Dia inteiro</option></select></div>
+        </div>
+        <div><label for="block-reason">Motivo do bloqueio</label><input id="block-reason" type="text" minlength="3" maxlength="240" placeholder="Ex.: manutenção ou evento escolar" required></div>
+        <button class="primary-button" type="submit">Criar bloqueio</button>
+      </form>
+      <div id="block-list" class="block-list"><p class="form-help">Carregando bloqueios...</p></div>
+    </section>
   </main>
   <footer>Kennedy Labs · Administração</footer>
 </body>
