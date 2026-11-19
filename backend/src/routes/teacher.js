@@ -25,6 +25,15 @@ async function requireTeacher(req, res, next) {
   } catch (error) { next(error); }
 }
 
+function todayInSchoolTimezone() {
+  const timeZone = process.env.SCHOOL_TIME_ZONE || "America/Sao_Paulo";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function validDate(value) {
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) return false;
   const date = new Date(value + "T00:00:00.000Z");
@@ -141,7 +150,7 @@ router.post("/reservations", requireCsrf, async (req, res, next) => {
     return res.status(400).json({ error: "Confira espaço, turma, data, finalidade e períodos selecionados." });
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInSchoolTimezone();
   if (date < today) return res.status(400).json({ error: "Não é possível reservar uma data que já passou." });
 
   let client;
