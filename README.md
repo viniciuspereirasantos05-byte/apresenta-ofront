@@ -57,9 +57,6 @@ Rotas iniciais de autenticação:
 - `GET /api/admin/teachers/pending`: lista cadastros pendentes (somente administradores).
 - `POST /api/admin/teachers/:teacherId/approve`: aprova cadastro (somente administradores).
 - `POST /api/admin/teachers/:teacherId/reject`: rejeita cadastro (somente administradores).
-- `GET /api/admin/teachers/pending`: lista cadastros pendentes (somente administradores).
-- `POST /api/admin/teachers/:teacherId/approve`: aprova cadastro (somente administradores).
-- `POST /api/admin/teachers/:teacherId/reject`: rejeita cadastro (somente administradores).
 
 As rotas de cadastro/login exigem o token CSRF no cabeçalho `x-csrf-token` e o envio dos cookies. Consulte [documentação de autenticação](docs/autenticacao.md) para o contrato das rotas.
 
@@ -75,7 +72,7 @@ As rotas de cadastro/login exigem o token CSRF no cabeçalho `x-csrf-token` e o 
 
 ## Estado do projeto
 
-A fundação do backend, o modelo inicial do banco e a primeira etapa de autenticação estão preparados. A primeira versão das rotas de aprovação administrativa e da criação única do primeiro administrador foi adicionada. A interface inicial de login e cadastro também foi criada. Ainda faltam provisionamento seguro do primeiro administrador, verificação e recuperação de e-mail, segundo fator, reservas, interface completa, testes automatizados e implantação.
+A fundação do backend, o modelo inicial do banco e a primeira etapa de autenticação estão preparados. A primeira versão das rotas de aprovação administrativa e da criação única do primeiro administrador foi adicionada. A interface inicial de login e cadastro também foi criada. Ainda faltam validar o primeiro administrador na implantação, verificação e recuperação de e-mail, segundo fator, reservas completas, interface de reservas, testes automatizados e implantação.
 
 ## Documentação
 
