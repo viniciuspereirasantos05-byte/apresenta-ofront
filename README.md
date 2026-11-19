@@ -56,7 +56,7 @@ Rotas iniciais de autenticação:
 - `POST /api/setup/first-admin`: cria o primeiro administrador uma única vez, com segredo temporário de configuração.
 - `GET /api/admin/teachers/pending`: lista cadastros pendentes (somente administradores).
 - `POST /api/admin/teachers/:teacherId/approve`: aprova cadastro (somente administradores).
-- `POST /api/admin/teachers/:teacherId/reject`: rejeita cadastro (somente administradores).
+- `POST /api/admin/teachers/:teacherId/reject`: rejeita cadastro (somente administradores).\n- `GET /api/admin/calendar-blocks`, `POST /api/admin/calendar-blocks`, `DELETE /api/admin/calendar-blocks/:blockId`: gerencia bloqueios de calendário.\n- `GET /api/teacher/spaces`, `/class-groups`, `/periods`, `/availability`: consulta dados para reservas.\n- `POST /api/teacher/reservations`: cria reserva automaticamente quando todos os períodos estão livres.\n- `GET /api/teacher/reservations/mine`: histórico do professor.\n- `GET /api/teacher/notifications`: avisos internos do professor.
 
 As rotas de cadastro/login exigem o token CSRF no cabeçalho `x-csrf-token` e o envio dos cookies. Consulte [documentação de autenticação](docs/autenticacao.md) para o contrato das rotas.
 
@@ -72,10 +72,10 @@ As rotas de cadastro/login exigem o token CSRF no cabeçalho `x-csrf-token` e o 
 
 ## Estado do projeto
 
-A fundação do backend, o modelo inicial do banco e a primeira etapa de autenticação estão preparados. A primeira versão das rotas de aprovação administrativa e da criação única do primeiro administrador foi adicionada. A interface inicial de login e cadastro também foi criada. Ainda faltam validar o primeiro administrador na implantação, verificação e recuperação de e-mail, segundo fator, reservas completas, interface de reservas, testes automatizados e implantação.
+A fundação do backend, o modelo inicial do banco e a primeira etapa de autenticação estão preparados. A primeira versão da consulta de disponibilidade, criação transacional de reservas, histórico, avisos internos e bloqueios administrativos foi adicionada. A primeira versão das rotas de aprovação administrativa e da criação única do primeiro administrador foi adicionada. A interface inicial de login e cadastro também foi criada. Ainda faltam validar o primeiro administrador na implantação, verificação e recuperação de e-mail, segundo fator, reservas completas, interface de reservas, testes automatizados e implantação.
 
 ## Documentação
 
 - [Arquitetura inicial](docs/arquitetura-inicial.md)
 - [Modelo de dados](docs/modelo-de-dados.md)
-- [Autenticação](docs/autenticacao.md)
+- [Autenticação](docs/autenticacao.md)\n- [Reservas e calendário](docs/reservas-e-calendario.md)
