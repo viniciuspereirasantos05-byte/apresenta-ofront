@@ -107,3 +107,11 @@ select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(139,207,121,
 .block-card p { margin:6px 0 0; color:var(--muted); font-size:.83rem; }
 .block-card .secondary-button { margin:0; min-height:38px; }
 @media(max-width:560px) { .block-card { align-items:flex-start; flex-direction:column; } }
+
+.notification-card { margin-top:24px; }
+.notification-item { display:grid; gap:7px; padding:15px 12px; border-top:1px solid var(--surface-border); }
+.notification-item.is-unread { border-left:3px solid var(--green); background:rgba(139,207,121,.045); }
+.notification-item strong { font-size:.92rem; }
+.notification-item p { margin:0; color:#d5e2d6; font-size:.87rem; line-height:1.55; }
+.notification-item small { color:var(--muted); }
+.notification-item .secondary-button { justify-self:start; min-height:36px; margin:5px 0 0; padding:8px 12px; font-size:.78rem; }
