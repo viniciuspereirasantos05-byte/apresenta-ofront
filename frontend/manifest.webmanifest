@@ -1,0 +1,19 @@
+{
+  "name": "Kennedy Labs",
+  "short_name": "Kennedy Labs",
+  "description": "Reservas dos espaços escolares do Colégio Presidente Kennedy.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b100d",
+  "theme_color": "#101510",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
