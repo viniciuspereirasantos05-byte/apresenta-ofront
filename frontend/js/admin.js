@@ -66,5 +66,105 @@
     try { await refreshCsrf(); await request("/api/auth/logout", { method: "POST", headers: { "x-csrf-token": csrfToken }, body: JSON.stringify({}) }); }
     finally { window.location.href = "./"; }
   });
+
+  function addSelectOption(select, value, label) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    select.append(option);
+  }
+  async function loadBlockOptions() {
+    const [spaceData, periodData] = await Promise.all([
+      request("/api/teacher/spaces").catch(() => ({ spaces: [] })),
+      request("/api/teacher/periods").catch(() => ({ periods: [] }))
+    ]);
+    const spaces = $("#block-space");
+    const periods = $("#block-period");
+    spaces.replaceChildren();
+    periods.replaceChildren();
+    addSelectOption(spaces, "", "Todos os espaços");
+    addSelectOption(periods, "", "Dia inteiro");
+    spaceData.spaces.forEach((space) => addSelectOption(spaces, space.id, space.name));
+    periodData.periods.forEach((period) => addSelectOption(
+      periods, period.id,
+      (period.shift === "morning" ? "Manhã" : period.shift === "afternoon" ? "Tarde" : "Noite") +
+      " · " + period.period_number + "ª aula"
+    ));
+  }
+  async function loadBlocks() {
+    const container = $("#block-list");
+    if (!container) return;
+    container.textContent = "Carregando bloqueios...";
+    try {
+      const data = await request("/api/admin/calendar-blocks");
+      container.replaceChildren();
+      if (!data.blocks.length) {
+        const empty = document.createElement("p");
+        empty.className = "form-help";
+        empty.textContent = "Nenhum bloqueio cadastrado.";
+        container.append(empty);
+        return;
+      }
+      data.blocks.forEach((block) => {
+        const card = document.createElement("article");
+        card.className = "block-card";
+        const info = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = new Date(block.block_date + "T12:00:00").toLocaleDateString("pt-BR") +
+          " · " + (block.space_name || "Todos os espaços");
+        const detail = document.createElement("p");
+        detail.textContent = (block.period_number ? block.period_number + "ª aula" : "Dia inteiro") + " · " + block.reason;
+        info.append(title, detail);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "secondary-button";
+        remove.textContent = "Remover";
+        remove.addEventListener("click", async () => {
+          remove.disabled = true;
+          try {
+            await refreshCsrf();
+            const result = await request("/api/admin/calendar-blocks/" + encodeURIComponent(block.id), {
+              method: "DELETE", headers: { "x-csrf-token": csrfToken }
+            });
+            message(result.message);
+            await loadBlocks();
+          } catch (error) { message(error.message, true); }
+          finally { remove.disabled = false; }
+        });
+        card.append(info, remove);
+        container.append(card);
+      });
+    } catch (error) {
+      container.textContent = error.message;
+    }
+  }
+  const blockForm = $("#block-form");
+  if (blockForm) {
+    blockForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = blockForm.querySelector("button[type=submit]");
+      button.disabled = true;
+      try {
+        await refreshCsrf();
+        const result = await request("/api/admin/calendar-blocks", {
+          method: "POST",
+          headers: { "x-csrf-token": csrfToken },
+          body: JSON.stringify({
+            date: $("#block-date").value,
+            spaceId: $("#block-space").value || null,
+            periodId: $("#block-period").value || null,
+            reason: $("#block-reason").value
+          })
+        });
+        message(result.message);
+        $("#block-reason").value = "";
+        await loadBlocks();
+      } catch (error) { message(error.message, true); }
+      finally { button.disabled = false; }
+    });
+    $("#refresh-blocks").addEventListener("click", loadBlocks);
+    loadBlockOptions().then(loadBlocks).catch((error) => message(error.message, true));
+  }
+
   loadPending();
 })();
