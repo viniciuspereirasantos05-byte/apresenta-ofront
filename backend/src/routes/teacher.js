@@ -134,6 +134,34 @@ router.get("/reservations/mine", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.get("/notifications", async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, title, message, read_at, created_at FROM notifications " +
+      "WHERE user_id = $1 ORDER BY created_at DESC LIMIT 30",
+      [req.session.user.id]
+    );
+    res.set("Cache-Control", "no-store");
+    return res.json({ notifications: result.rows });
+  } catch (error) { next(error); }
+});
+
+router.post("/notifications/:notificationId/read", requireCsrf, async (req, res, next) => {
+  const notificationId = String(req.params.notificationId || "");
+  if (!UUID_PATTERN.test(notificationId)) {
+    return res.status(400).json({ error: "Identificador de notificação inválido." });
+  }
+  try {
+    const result = await pool.query(
+      "UPDATE notifications SET read_at = COALESCE(read_at, NOW()) " +
+      "WHERE id = $1 AND user_id = $2 RETURNING id, read_at",
+      [notificationId, req.session.user.id]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Notificação não encontrada." });
+    return res.json({ notification: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
 router.post("/reservations", requireCsrf, async (req, res, next) => {
   const spaceId = String(req.body.spaceId || "");
   const classGroupId = String(req.body.classGroupId || "");
