@@ -1,5 +1,5 @@
 const CACHE_NAME = "kennedy-labs-static-v1";
-const APP_FILES = ["./", "./index.html", "./css/styles.css", "./js/config.js", "./js/app.js", "./manifest.webmanifest", "./icons/icon.svg"];
+const APP_FILES = ["./", "./index.html", "./css/styles.css", "./js/config.js", "./js/app.js", "./manifest.webmanifest", "./icons/icon.svg", "./admin.html", "./teacher.html", "./js/admin.js", "./js/teacher.js", "./js/pwa.js"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES)));
