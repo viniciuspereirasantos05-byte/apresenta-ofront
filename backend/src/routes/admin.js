@@ -8,6 +8,24 @@ const pool = getPool();
 
 router.use(requireAuthenticated, requireAdmin);
 
+
+router.get("/spaces", async (_req, res, next) => {
+  try {
+    const result = await pool.query("SELECT id, name FROM spaces WHERE active = TRUE ORDER BY name");
+    return res.json({ spaces: result.rows });
+  } catch (error) { next(error); }
+});
+
+router.get("/periods", async (_req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, shift, period_number FROM lesson_periods WHERE active = TRUE " +
+      "ORDER BY CASE shift WHEN 'morning' THEN 1 WHEN 'afternoon' THEN 2 ELSE 3 END, period_number"
+    );
+    return res.json({ periods: result.rows });
+  } catch (error) { next(error); }
+});
+
 router.get("/teachers/pending", async (_req, res, next) => {
   try {
     const result = await pool.query(
