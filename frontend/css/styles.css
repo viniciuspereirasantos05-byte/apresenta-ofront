@@ -71,3 +71,30 @@ footer { padding:22px; color:#849287; text-align:center; font-size:.8rem; }
 .teacher-actions .primary-button,.teacher-actions .secondary-button,.top-logout { min-height:40px; margin:0; padding:9px 13px; font-size:.82rem; }
 .top-logout { width:auto; }
 @media(max-width:620px) { .dashboard-heading { align-items:flex-start; flex-direction:column; } .teacher-card { align-items:flex-start; flex-direction:column; } .list-heading { align-items:flex-start; flex-direction:column; } }
+
+select { width:100%; min-height:46px; padding:11px 13px; border:1px solid #344638; border-radius:9px; outline:none; background:#0d140f; color:#f1f5f1; }
+select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(139,207,121,.12); }
+.booking-card,.reservation-history { margin-top:24px; }
+.booking-form { gap:18px; }
+.booking-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.booking-fields > div,.booking-form > div { min-width:0; }
+.booking-form input,.booking-form select { margin-top:8px; }
+.period-picker { padding-top:8px; border-top:1px solid var(--surface-border); }
+.period-picker .list-heading { margin:12px 0 18px; }
+.period-picker h3 { margin:0; font-size:1rem; }
+.period-list { display:grid; gap:20px; }
+.period-group h4 { margin:0 0 10px; color:var(--green); font-size:.88rem; }
+.period-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:9px; }
+.period-option { display:flex; align-items:center; gap:9px; min-height:54px; margin:0; padding:10px; border:1px solid #344638; border-radius:10px; background:#101811; cursor:pointer; }
+.period-option input { width:17px; min-height:17px; margin:0; accent-color:var(--green); }
+.period-option span { font-size:.83rem; }
+.period-option small { margin-left:auto; text-align:right; }
+.period-option.is-unavailable { opacity:.5; cursor:not-allowed; }
+.period-option:has(input:checked) { border-color:var(--green); background:#1b2a1d; }
+.reservation-card { position:relative; display:grid; gap:7px; padding:18px 0; border-top:1px solid var(--surface-border); }
+.reservation-card h3 { margin:0; font-size:1rem; }
+.reservation-card p { margin:0; color:#d5e2d6; font-size:.9rem; }
+.reservation-card small { color:var(--muted); }
+.reservation-status { justify-self:start; margin-top:5px; padding:5px 9px; border:1px solid #536054; border-radius:20px; color:#c3cec4; font-size:.75rem; }
+.reservation-status.is-confirmed { border-color:#527d54; color:var(--green); }
+@media(max-width:700px) { .booking-fields { grid-template-columns:1fr; } }
