@@ -53,3 +53,21 @@ footer { padding:22px; color:#849287; text-align:center; font-size:.8rem; }
 [hidden] { display:none !important; }
 @media(max-width:800px) { .auth-layout { max-width:520px; grid-template-columns:1fr; gap:28px; padding:42px 0; } .intro-panel h1 { font-size:clamp(2.35rem,10vw,3.5rem); } .feature-list { display:none; } }
 @media(max-width:520px) { .environment { font-size:.7rem; } .topbar { min-height:66px; } .auth-layout { width:min(100% - 28px,520px); padding:30px 0; } .auth-card { padding:22px; } }
+
+.dashboard { width:min(100% - 40px,1000px); min-height:calc(100vh - 140px); margin:auto; padding:58px 0; }
+.dashboard-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:30px; }
+.dashboard-heading h1 { margin:12px 0; font-size:clamp(2rem,5vw,3.4rem); }
+.count-card { min-width:150px; padding:18px; display:grid; gap:4px; border:1px solid var(--surface-border); border-radius:14px; background:var(--surface); }
+.count-card strong { color:var(--green); font-size:2rem; }
+.count-card span { color:var(--muted); font-size:.8rem; }
+.list-card { padding:clamp(20px,4vw,32px); border:1px solid var(--surface-border); border-radius:18px; background:var(--surface); }
+.list-heading { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-bottom:20px; }
+.list-heading h2 { margin:0; font-size:1.2rem; }
+.teacher-card { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:20px 0; border-top:1px solid var(--surface-border); }
+.teacher-details h3 { margin:0 0 6px; font-size:1rem; }
+.teacher-details p { margin:0 0 5px; color:#d5e2d6; font-size:.9rem; }
+.teacher-details small { color:var(--muted); }
+.teacher-actions { display:flex; gap:8px; flex-shrink:0; }
+.teacher-actions .primary-button,.teacher-actions .secondary-button,.top-logout { min-height:40px; margin:0; padding:9px 13px; font-size:.82rem; }
+.top-logout { width:auto; }
+@media(max-width:620px) { .dashboard-heading { align-items:flex-start; flex-direction:column; } .teacher-card { align-items:flex-start; flex-direction:column; } .list-heading { align-items:flex-start; flex-direction:column; } }
