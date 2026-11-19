@@ -76,7 +76,7 @@ async function updateTeacherStatus(req, res, next, nextStatus) {
       teacher: { id: teacher.id, fullName: teacher.full_name, email: teacher.email, accountStatus: nextStatus }
     });
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
   } finally {
     if (client) client.release();
