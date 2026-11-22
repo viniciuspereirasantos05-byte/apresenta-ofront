@@ -105,9 +105,6 @@ router.post("/first-admin", setupLimiter, requireCsrf, async (req, res, next) =>
   }
 });
 
-module.exports = router;
-
-
 // Recuperação temporária da senha de um administrador.
 // Só fica disponível enquanto ADMIN_PASSWORD_RESET_SECRET estiver configurado no servidor.
 const resetLimiter = rateLimit({
@@ -174,3 +171,6 @@ router.post("/reset-admin-password", resetLimiter, requireCsrf, async (req, res,
     if (client) client.release();
   }
 });
+
+
+module.exports = router;
