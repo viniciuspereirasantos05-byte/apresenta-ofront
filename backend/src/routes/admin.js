@@ -5,6 +5,7 @@ const { requireCsrf } = require("../middleware/csrf");
 
 const router = express.Router();
 const pool = getPool();
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 router.use(requireAuthenticated, requireAdmin);
 
@@ -234,3 +235,67 @@ router.delete("/calendar-blocks/:blockId", requireCsrf, async (req, res, next) =
 });
 
 module.exports = router;
+
+async function insertTimetableEntry(client, teacherId, entry) {
+ const {classGroupId,subjectId,lessonPeriodId,weekday}=entry||{};
+ if(!UUID.test(String(classGroupId||""))||!UUID.test(String(subjectId||""))||!UUID.test(String(lessonPeriodId||""))||!Number.isInteger(weekday)||weekday<1||weekday>5)
+  throw Object.assign(new Error("Confira turma, matéria, período e dia da semana."),{status:400});
+ const teacher=await client.query("SELECT id FROM users WHERE id=$1 AND role='teacher' AND account_status='active' FOR SHARE",[teacherId]);
+ if(!teacher.rowCount) throw Object.assign(new Error("Professor não encontrado ou inativo."),{status:404});
+ const [group,period,subject]=await Promise.all([
+  client.query("SELECT id,shift FROM class_groups WHERE id=$1 AND active=TRUE",[classGroupId]),
+  client.query("SELECT id,shift FROM lesson_periods WHERE id=$1 AND active=TRUE",[lessonPeriodId]),
+  client.query("SELECT id FROM subjects WHERE id=$1 AND active=TRUE",[subjectId])
+ ]);
+ if(!group.rowCount||!period.rowCount||!subject.rowCount) throw Object.assign(new Error("Turma, matéria ou horário não encontrado/ativo."),{status:400});
+ if(group.rows[0].shift!==period.rows[0].shift) throw Object.assign(new Error("O horário precisa pertencer ao mesmo turno da turma."),{status:400});
+ await client.query("INSERT INTO teacher_assignments(teacher_id,subject_id,class_group_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",[teacherId,subjectId,classGroupId]);
+ const inserted=await client.query("INSERT INTO teacher_timetable_entries(teacher_id,class_group_id,subject_id,lesson_period_id,weekday) VALUES($1,$2,$3,$4,$5) RETURNING id",[teacherId,classGroupId,subjectId,lessonPeriodId,weekday]);
+ return inserted.rows[0];
+}
+router.get("/teachers/active",async(_req,res,next)=>{try{
+ const r=await pool.query("SELECT id,full_name,email FROM users WHERE role='teacher' AND account_status='active' ORDER BY full_name");
+ return res.json({teachers:r.rows});
+}catch(e){next(e);}});
+router.get("/teachers/:teacherId/timetable",async(req,res,next)=>{try{
+ const r=await pool.query("SELECT t.id,t.weekday,t.class_group_id,cg.name AS class_group_name,t.subject_id,s.name AS subject_name,t.lesson_period_id,p.shift,p.period_number,p.starts_at,p.ends_at FROM teacher_timetable_entries t JOIN class_groups cg ON cg.id=t.class_group_id JOIN subjects s ON s.id=t.subject_id JOIN lesson_periods p ON p.id=t.lesson_period_id WHERE t.teacher_id=$1 AND t.active=TRUE ORDER BY t.weekday,p.starts_at",[req.params.teacherId]);
+ return res.json({entries:r.rows});
+}catch(e){next(e);}});
+router.post("/teachers/:teacherId/timetable",requireCsrf,async(req,res,next)=>{
+ const teacherId=String(req.params.teacherId||""); if(!UUID.test(teacherId)) return res.status(400).json({error:"Professor inválido."});
+ let client; try{client=await pool.connect();await client.query("BEGIN");
+ const entry=await insertTimetableEntry(client,teacherId,req.body||{});
+ await client.query("INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'timetable.entry_created','user',$2,$3::jsonb)",[req.session.user.id,teacherId,JSON.stringify(req.body)]);
+ await client.query("COMMIT");return res.status(201).json({message:"Aula adicionada à grade semanal.",entry});
+ }catch(e){if(client)await client.query("ROLLBACK").catch(()=>{});if(e.code==="23505")return res.status(409).json({error:"Já existe uma aula nesse horário para esse professor ou turma."});if(e.status)return res.status(e.status).json({error:e.message});return next(e);}
+ finally{if(client)client.release();}
+});
+router.delete("/teachers/:teacherId/timetable/:entryId",requireCsrf,async(req,res,next)=>{
+ if(!UUID.test(String(req.params.teacherId||""))||!UUID.test(String(req.params.entryId||"")))return res.status(400).json({error:"Identificador inválido."});
+ try{const r=await pool.query("DELETE FROM teacher_timetable_entries WHERE id=$1 AND teacher_id=$2 RETURNING id",[req.params.entryId,req.params.teacherId]);if(!r.rowCount)return res.status(404).json({error:"Aula não encontrada na grade."});
+ await pool.query("INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id) VALUES($1,'timetable.entry_deleted','user',$2)",[req.session.user.id,req.params.teacherId]);return res.json({message:"Aula removida da grade."});
+ }catch(e){next(e);}
+});
+router.get("/timetable/change-requests",async(_req,res,next)=>{try{
+ const r=await pool.query("SELECT q.id,q.teacher_id,u.full_name,q.proposed_entries,q.message,q.created_at FROM timetable_change_requests q JOIN users u ON u.id=q.teacher_id WHERE q.status='pending' ORDER BY q.created_at");
+ return res.json({requests:r.rows});
+}catch(e){next(e);}});
+router.post("/timetable/change-requests/:requestId/:decision",requireCsrf,async(req,res,next)=>{
+ const {requestId,decision}=req.params;if(!UUID.test(String(requestId))||!["approve","reject"].includes(decision))return res.status(400).json({error:"Solicitação ou decisão inválida."});
+ let client;try{client=await pool.connect();await client.query("BEGIN");
+ const found=await client.query("SELECT * FROM timetable_change_requests WHERE id=$1 AND status='pending' FOR UPDATE",[requestId]);
+ if(!found.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Solicitação pendente não encontrada."});}
+ const item=found.rows[0];
+ if(decision==="approve"){
+  if(!Array.isArray(item.proposed_entries)||item.proposed_entries.length>60)throw Object.assign(new Error("A grade enviada não é válida."),{status:400});
+  await client.query("DELETE FROM teacher_timetable_entries WHERE teacher_id=$1",[item.teacher_id]);
+  for(const entry of item.proposed_entries)await insertTimetableEntry(client,item.teacher_id,entry);
+ }
+ const status=decision==="approve"?"approved":"rejected";
+ await client.query("UPDATE timetable_change_requests SET status=$1,reviewed_by=$2,reviewed_at=NOW(),review_message=$3 WHERE id=$4",[status,req.session.user.id,String(req.body?.message||"").trim().slice(0,500)||null,requestId]);
+ await client.query("INSERT INTO notifications(user_id,title,message) VALUES($1,$2,$3)",[item.teacher_id,decision==="approve"?"Grade atualizada":"Alteração de grade não aprovada",decision==="approve"?"A secretaria aprovou sua solicitação e atualizou sua grade semanal.":"A secretaria não aprovou sua solicitação de alteração da grade. Consulte a secretaria para mais informações."]);
+ await client.query("INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id,details) VALUES($1,$2,'timetable_change_request',$3,$4::jsonb)",[req.session.user.id,"timetable.request_"+status,requestId,JSON.stringify({teacherId:item.teacher_id})]);
+ await client.query("COMMIT");return res.json({message:decision==="approve"?"Alteração aprovada e grade atualizada.":"Solicitação rejeitada."});
+ }catch(e){if(client)await client.query("ROLLBACK").catch(()=>{});if(e.code==="23505")return res.status(409).json({error:"A grade entra em conflito com outra aula do professor ou da turma. A grade anterior foi mantida."});if(e.status)return res.status(e.status).json({error:e.message});return next(e);}
+ finally{if(client)client.release();}
+});
