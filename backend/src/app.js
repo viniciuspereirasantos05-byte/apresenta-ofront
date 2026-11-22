@@ -94,8 +94,8 @@ app.use((req, res) => {
   res.status(404).json({ error: "Rota não encontrada." });
 });
 
-app.use((err, _req, res, _next) => {
-  console.error("Erro na API:", err.message);
+app.use((err, _req, res, next) => {
+  console.error("Erro na API:", err.message);\n  if (res.headersSent) return next(err);
   if (err.message === "Origem não permitida pelo CORS.") {
     return res.status(403).json({ error: "Origem não permitida." });
   }
