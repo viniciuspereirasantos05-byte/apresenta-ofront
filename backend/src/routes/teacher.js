@@ -98,6 +98,12 @@ router.get("/availability", async (req, res, next) => {
       "EXISTS (SELECT 1 FROM reservation_slots rs JOIN reservations r ON r.id = rs.reservation_id " +
       "WHERE rs.space_id = $1 AND rs.reservation_date = $2 AND rs.lesson_period_id = p.id " +
       "AND rs.is_active = TRUE AND r.status = 'confirmed') AS reserved, " +
+      "EXISTS (SELECT 1 FROM reservation_slots rs JOIN reservations r ON r.id = rs.reservation_id " +
+      "WHERE r.teacher_id = $3 AND rs.reservation_date = $2 AND rs.lesson_period_id = p.id " +
+      "AND rs.is_active = TRUE AND r.status = 'confirmed') AS teacher_reserved, " +
+      "EXISTS (SELECT 1 FROM reservation_slots rs JOIN reservations r ON r.id = rs.reservation_id " +
+      "WHERE r.class_group_id = $4 AND rs.reservation_date = $2 AND rs.lesson_period_id = p.id " +
+      "AND rs.is_active = TRUE AND r.status = 'confirmed') AS class_reserved, " +
       "EXISTS (SELECT 1 FROM calendar_blocks cb WHERE cb.block_date = $2 " +
       "AND (cb.space_id IS NULL OR cb.space_id = $1) " +
       "AND (cb.lesson_period_id IS NULL OR cb.lesson_period_id = p.id)) AS blocked, " +
@@ -110,7 +116,7 @@ router.get("/availability", async (req, res, next) => {
     res.set("Cache-Control", "no-store");
     return res.json({
       date, spaceId,
-      periods: result.rows.map((period) => ({ ...period, available: !period.reserved && !period.blocked && period.teacher_eligible }))
+      periods: result.rows.map((period) => ({ ...period, available: !period.reserved && !period.blocked && !period.teacher_reserved && !period.class_reserved && period.teacher_eligible }))
     });
   } catch (error) { next(error); }
 });
@@ -253,6 +259,18 @@ router.post("/reservations", requireCsrf, async (req, res, next) => {
     if (blocks.rowCount) {
       await client.query("ROLLBACK");
       return res.status(409).json({ error: "Um ou mais períodos estão bloqueados pela administração." });
+    }
+
+    const duplicateBooking = await client.query(
+      "SELECT 1 FROM reservation_slots rs JOIN reservations r ON r.id = rs.reservation_id " +
+      "WHERE rs.reservation_date = $1 AND rs.lesson_period_id = ANY($2::uuid[]) " +
+      "AND rs.is_active = TRUE AND r.status = 'confirmed' " +
+      "AND (r.teacher_id = $3 OR r.class_group_id = $4) LIMIT 1",
+      [date, periodIds, req.session.user.id, classGroupId]
+    );
+    if (duplicateBooking.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Você ou essa turma já possui uma reserva confirmada em um dos períodos selecionados, mesmo que seja em outro espaço." });
     }
 
     const timetable = await client.query(
