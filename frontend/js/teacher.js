@@ -103,7 +103,8 @@
     }
     periodList.textContent = "Consultando disponibilidade...";
     try {
-      const data = await request("/api/teacher/availability?date=" + encodeURIComponent(date) + "&spaceId=" + encodeURIComponent(spaceId));
+      const classGroupId = $("#booking-class").value;
+      const data = await request("/api/teacher/availability?date=" + encodeURIComponent(date) + "&spaceId=" + encodeURIComponent(spaceId) + "&classGroupId=" + encodeURIComponent(classGroupId));
       periods = data.periods.filter((period) => period.shift === classShift);
       renderPeriods(periods);
     } catch (error) {
@@ -138,6 +139,25 @@
   }
 
 
+  async function loadTimetable() {
+    const container = $("#teacher-timetable-list");
+    if (!container) return;
+    try {
+      const data = await request("/api/teacher/timetable");
+      container.replaceChildren();
+      if (!data.entries.length) {
+        const empty = document.createElement("p"); empty.className = "form-help";
+        empty.textContent = "Sua grade ainda não foi cadastrada pela secretaria. Quando estiver pronta, os horários corretos aparecerão automaticamente nas reservas.";
+        container.append(empty); return;
+      }
+      const days = ["", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
+      data.entries.forEach((entry) => {
+        const line = document.createElement("p"); line.className = "timetable-line";
+        line.textContent = days[entry.weekday] + " · " + entry.period_number + "ª aula (" + formatTime(entry.starts_at) + "–" + formatTime(entry.ends_at) + ") · " + entry.class_group_name + " · " + entry.subject_name;
+        container.append(line);
+      });
+    } catch (error) { container.textContent = error.message; }
+  }
   async function loadNotifications() {
     const container = $("#notification-list");
     container.textContent = "Carregando avisos...";
@@ -217,6 +237,7 @@
       if (!me.authenticated || me.user.role !== "teacher") { window.location.href = "./"; return; }
       $("#welcome-title").textContent = "Olá, " + me.user.fullName + "!";
       await loadOptions();
+      await loadTimetable();
       const periodData = await request("/api/teacher/periods");
       periods = periodData.periods;
       await loadReservations();
@@ -233,6 +254,7 @@
   $("#refresh-availability").addEventListener("click", loadAvailability);
   $("#refresh-reservations").addEventListener("click", loadReservations);
   $("#refresh-notifications").addEventListener("click", loadNotifications);
+  $("#refresh-timetable")?.addEventListener("click", loadTimetable);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
