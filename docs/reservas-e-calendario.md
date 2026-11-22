@@ -48,3 +48,12 @@ Não foram inventados horários, turmas ou períodos. A tabela `lesson_periods` 
 - Definir como funcionam reservas recorrentes.
 - Definir a política para reagendar ou cancelar reservas que já foram afetadas por um bloqueio administrativo.
 - Implantar envio de avisos por e-mail; nesta etapa, os avisos são internos.
+
+
+## Grade semanal dos professores (migração 003)
+A secretaria cadastra a grade semanal após cadastrar turmas, matérias e períodos. Cada aula relaciona professor, turma, matéria, dia da semana (1=segunda a 5=sexta) e período. O banco impede dois compromissos simultâneos para o mesmo professor ou turma.
+- Administração: GET /api/admin/teachers/active, GET /api/admin/teachers/:teacherId/timetable, POST /api/admin/teachers/:teacherId/timetable e DELETE /api/admin/teachers/:teacherId/timetable/:entryId.
+- Professor: GET /api/teacher/timetable consulta a grade oficial; POST /api/teacher/timetable/change-requests envia proposta de grade completa para análise.
+- Secretaria: GET /api/admin/timetable/change-requests lista pedidos; POST /api/admin/timetable/change-requests/:requestId/approve ou /reject decide.
+- A reserva valida no servidor o dia da semana, a turma, o professor e todos os períodos selecionados. A grade anterior permanece se a aprovação gerar conflito.
+- A tela de grade do professor é de consulta. As solicitações de alteração ainda são enviadas via API; a interface para montar a proposta e o painel visual de cadastro/aprovação da secretaria são etapas seguintes.
