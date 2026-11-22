@@ -115,3 +115,17 @@ select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(139,207,121,
 .notification-item p { margin:0; color:#d5e2d6; font-size:.87rem; line-height:1.55; }
 .notification-item small { color:var(--muted); }
 .notification-item .secondary-button { justify-self:start; min-height:36px; margin:5px 0 0; padding:8px 12px; font-size:.78rem; }
+
+.timetable-line { margin:0; padding:10px 0; border-top:1px solid var(--surface-border); color:#d5e2d6; font-size:.88rem; line-height:1.5; }
+.timetable-request { margin-top:22px; padding-top:20px; border-top:1px solid var(--surface-border); }
+.timetable-request h3 { margin:0 0 8px; font-size:1rem; }
+.timetable-draft { display:grid; gap:10px; margin:14px 0; }
+.timetable-draft-row { display:grid; grid-template-columns:1fr 1fr 1fr 1.5fr auto; align-items:center; gap:8px; padding:10px; border:1px solid var(--surface-border); border-radius:10px; background:#101811; }
+.timetable-draft-row select { min-width:0; }
+.timetable-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.timetable-actions .secondary-button { margin:0; }
+.timetable-request > .primary-button { margin-top:14px; }
+.timetable-request-preview { margin-top:12px; padding-top:8px; border-top:1px solid var(--surface-border); }
+.timetable-request-preview p { margin:7px 0; color:#d5e2d6; font-size:.82rem; }
+@media(max-width:760px) { .timetable-draft-row { grid-template-columns:1fr 1fr; } .timetable-draft-row select:nth-child(4) { grid-column:1/-1; } }
+@media(max-width:460px) { .timetable-draft-row { grid-template-columns:1fr; } .timetable-draft-row select:nth-child(4) { grid-column:auto; } }
