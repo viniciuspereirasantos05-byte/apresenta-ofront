@@ -27,6 +27,16 @@ router.get("/periods", async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
+
+router.get("/class-groups", async (_req, res, next) => {
+  try { const r = await pool.query("SELECT id,name,shift FROM class_groups WHERE active=TRUE ORDER BY shift,name"); return res.json({classGroups:r.rows}); }
+  catch(e){next(e);}
+});
+router.get("/subjects", async (_req, res, next) => {
+  try { const r = await pool.query("SELECT id,name FROM subjects WHERE active=TRUE ORDER BY name"); return res.json({subjects:r.rows}); }
+  catch(e){next(e);}
+});
+
 router.get("/teachers/pending", async (_req, res, next) => {
   try {
     const result = await pool.query(
