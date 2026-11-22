@@ -106,3 +106,71 @@ router.post("/first-admin", setupLimiter, requireCsrf, async (req, res, next) =>
 });
 
 module.exports = router;
+
+
+// Recuperação temporária da senha de um administrador.
+// Só fica disponível enquanto ADMIN_PASSWORD_RESET_SECRET estiver configurado no servidor.
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Muitas tentativas de recuperação. Aguarde e tente novamente." }
+});
+
+router.post("/reset-admin-password", resetLimiter, requireCsrf, async (req, res, next) => {
+  const resetSecret = process.env.ADMIN_PASSWORD_RESET_SECRET;
+  if (!resetSecret || resetSecret.length < 32) {
+    return res.status(404).json({ error: "Recuperação temporária indisponível." });
+  }
+
+  const providedSecret = String(req.body.resetSecret || "");
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const password = String(req.body.password || "");
+
+  if (!secretMatches(providedSecret, resetSecret)) {
+    return res.status(403).json({ error: "Código de recuperação inválido." });
+  }
+  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "Informe um e-mail válido." });
+  }
+  if (password.length < 12 || password.length > 128) {
+    return res.status(400).json({ error: "A nova senha deve ter entre 12 e 128 caracteres." });
+  }
+
+  let client;
+  try {
+    const passwordHash = await argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 19456,
+      timeCost: 2,
+      parallelism: 1
+    });
+
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const updated = await client.query(
+      `UPDATE users
+       SET password_hash = $1
+       WHERE LOWER(email) = $2 AND role = 'admin'
+       RETURNING id, email`,
+      [passwordHash, email]
+    );
+
+    if (updated.rowCount !== 1) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Não foi encontrada uma conta administrativa com esse e-mail." });
+    }
+
+    await client.query("COMMIT");
+    return res.status(200).json({
+      message: "Senha administrativa redefinida. Remova ADMIN_PASSWORD_RESET_SECRET do Render agora.",
+      email: updated.rows[0].email
+    });
+  } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    if (client) client.release();
+  }
+});
