@@ -191,5 +191,53 @@
     loadBlockOptions().then(loadBlocks).catch((error) => message(error.message, true));
   }
 
+
+  async function fillOptions(selector, items, label) {
+    const el=$(selector); el.replaceChildren(); addSelectOption(el,"","Selecione");
+    items.forEach(item=>addSelectOption(el,item.id,label(item)));
+  }
+  async function loadTimetableOptions(){
+    const [teachers,classes,subjects,periods]=await Promise.all([
+      request("/api/admin/teachers/active"),request("/api/admin/class-groups"),
+      request("/api/admin/subjects"),request("/api/admin/periods")
+    ]);
+    await fillOptions("#timetable-teacher",teachers.teachers,t=>t.full_name);
+    await fillOptions("#timetable-class",classes.classGroups,c=>c.name);
+    await fillOptions("#timetable-subject",subjects.subjects,s=>s.name);
+    await fillOptions("#timetable-period",periods.periods,p=>(p.shift==="morning"?"Manhã":p.shift==="afternoon"?"Tarde":"Noite")+" · "+p.period_number+"ª aula");
+  }
+  async function loadTeacherTimetable(){
+    const teacherId=$("#timetable-teacher").value, container=$("#timetable-current");
+    if(!teacherId){container.textContent="Selecione um professor para visualizar a grade.";return;}
+    container.textContent="Carregando grade...";
+    try{
+      const data=await request("/api/admin/teachers/"+encodeURIComponent(teacherId)+"/timetable");
+      container.replaceChildren();
+      if(!data.entries.length){container.textContent="Nenhuma aula cadastrada para este professor.";return;}
+      const days=["","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira"];
+      data.entries.forEach(entry=>{
+        const row=document.createElement("article");row.className="block-card";
+        const info=document.createElement("div"),title=document.createElement("strong"),detail=document.createElement("p");
+        title.textContent=days[entry.weekday]+" · "+entry.period_number+"ª aula";
+        detail.textContent=entry.class_group_name+" · "+entry.subject_name+" · "+entry.starts_at.slice(0,5)+"–"+entry.ends_at.slice(0,5);
+        info.append(title,detail);
+        const remove=document.createElement("button");remove.className="secondary-button";remove.type="button";remove.textContent="Remover";
+        remove.addEventListener("click",async()=>{try{await refreshCsrf();await request("/api/admin/teachers/"+encodeURIComponent(teacherId)+"/timetable/"+encodeURIComponent(entry.id),{method:"DELETE",headers:{"x-csrf-token":csrfToken}});await loadTeacherTimetable();}catch(e){message(e.message,true);}});
+        row.append(info,remove);container.append(row);
+      });
+    }catch(e){container.textContent=e.message;}
+  }
+  $("#timetable-teacher").addEventListener("change",loadTeacherTimetable);
+  $("#timetable-form").addEventListener("submit",async event=>{
+    event.preventDefault();const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
+    try{
+      await refreshCsrf();
+      const teacherId=$("#timetable-teacher").value;
+      const data=await request("/api/admin/teachers/"+encodeURIComponent(teacherId)+"/timetable",{method:"POST",headers:{"x-csrf-token":csrfToken},body:JSON.stringify({weekday:Number($("#timetable-day").value),classGroupId:$("#timetable-class").value,subjectId:$("#timetable-subject").value,lessonPeriodId:$("#timetable-period").value})});
+      message(data.message);await loadTeacherTimetable();
+    }catch(e){message(e.message,true);}finally{button.disabled=false;}
+  });
+
   loadPending();
+  loadTimetableOptions().catch(error=>message(error.message,true));
 })();
