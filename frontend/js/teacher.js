@@ -258,6 +258,7 @@
         });
       }
       await loadTimetableRequestOptions();
+      if (!timetableDraft.length && currentTimetable.length) copyCurrentTimetable();
     } catch (error) { container.textContent = error.message; }
   }
 
