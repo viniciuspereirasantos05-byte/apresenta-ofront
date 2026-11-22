@@ -197,6 +197,7 @@
     const el=$(selector); el.replaceChildren(); addSelectOption(el,"","Selecione");
     items.forEach(item=>addSelectOption(el,item.id,label(item)));
   }
+  let timetableLookups={classes:[],subjects:[],periods:[]};
   async function loadTimetableOptions(){
     const [teachers,classes,subjects,periods]=await Promise.all([
       request("/api/admin/teachers/active"),request("/api/admin/class-groups"),
@@ -206,6 +207,7 @@
     await fillOptions("#timetable-class",classes.classGroups,c=>c.name);
     await fillOptions("#timetable-subject",subjects.subjects,s=>s.name);
     await fillOptions("#timetable-period",periods.periods,p=>(p.shift==="morning"?"Manhã":p.shift==="afternoon"?"Tarde":"Noite")+" · "+p.period_number+"ª aula");
+    timetableLookups={classes:classes.classGroups,subjects:subjects.subjects,periods:periods.periods};
   }
   async function loadTeacherTimetable(){
     const teacherId=$("#timetable-teacher").value, container=$("#timetable-current");
@@ -228,6 +230,52 @@
       });
     }catch(e){container.textContent=e.message;}
   }
+
+  async function loadTimetableRequests(){
+    const container=$("#timetable-request-list");
+    if(!container)return;
+    container.textContent="Carregando solicitações...";
+    try{
+      const data=await request("/api/admin/timetable/change-requests");
+      container.replaceChildren();
+      if(!data.requests.length){container.textContent="Nenhuma solicitação aguardando análise.";return;}
+      const days=["","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira"];
+      data.requests.forEach(item=>{
+        const card=document.createElement("article");card.className="teacher-card";
+        const details=document.createElement("div");details.className="teacher-details";
+        const title=document.createElement("h3");title.textContent=item.full_name;
+        const date=document.createElement("small");date.textContent="Enviada em "+new Date(item.created_at).toLocaleString("pt-BR");
+        const note=document.createElement("p");note.textContent=item.message||"Sem observações.";
+        const list=document.createElement("div");list.className="timetable-request-preview";
+        (item.proposed_entries||[]).forEach(entry=>{
+          const group=timetableLookups.classes.find(x=>x.id===entry.classGroupId);
+          const subject=timetableLookups.subjects.find(x=>x.id===entry.subjectId);
+          const period=timetableLookups.periods.find(x=>x.id===entry.lessonPeriodId);
+          const line=document.createElement("p");
+          line.textContent=days[entry.weekday]+" · "+(period?period.period_number+"ª aula ("+period.starts_at.slice(0,5)+"–"+period.ends_at.slice(0,5)+")":"horário não localizado")+" · "+(group?group.name:"turma não localizada")+" · "+(subject?subject.name:"matéria não localizada");
+          list.append(line);
+        });
+        details.append(title,date,note,list);
+        const actions=document.createElement("div");actions.className="teacher-actions";
+        const approve=document.createElement("button");approve.className="primary-button";approve.type="button";approve.textContent="Aprovar";
+        const reject=document.createElement("button");reject.className="secondary-button";reject.type="button";reject.textContent="Rejeitar";
+        const decide=async decision=>{
+          approve.disabled=true;reject.disabled=true;
+          try{
+            await refreshCsrf();
+            const result=await request("/api/admin/timetable/change-requests/"+encodeURIComponent(item.id)+"/"+decision,{method:"POST",headers:{"x-csrf-token":csrfToken},body:JSON.stringify({})});
+            message(result.message);await loadTimetableRequests();
+            if(decision==="approve"&&$("#timetable-teacher").value===item.teacher_id)await loadTeacherTimetable();
+          }catch(error){message(error.message,true);approve.disabled=false;reject.disabled=false;}
+        };
+        approve.addEventListener("click",()=>decide("approve"));
+        reject.addEventListener("click",()=>decide("reject"));
+        actions.append(approve,reject);card.append(details,actions);container.append(card);
+      });
+    }catch(error){container.textContent=error.message;}
+  }
+  $("#refresh-timetable-requests").addEventListener("click",loadTimetableRequests);
+
   $("#timetable-teacher").addEventListener("change",loadTeacherTimetable);
   $("#timetable-form").addEventListener("submit",async event=>{
     event.preventDefault();const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
@@ -240,5 +288,5 @@
   });
 
   loadPending();
-  loadTimetableOptions().catch(error=>message(error.message,true));
+  loadTimetableOptions().then(loadTimetableRequests).catch(error=>message(error.message,true));
 })();
