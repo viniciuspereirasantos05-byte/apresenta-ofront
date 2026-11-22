@@ -30,8 +30,13 @@
     event.preventDefault();
     showNotice("");
     const values = new FormData(form);
+    const email = String(values.get("email") || "").trim();
     const password = String(values.get("password") || "");
     const confirmation = String(values.get("passwordConfirm") || "");
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showNotice("Informe um e-mail válido.", true);
+      return;
+    }
     if (password !== confirmation) {
       showNotice("As senhas não coincidem. Confira os dois campos.", true);
       return;
@@ -50,7 +55,7 @@
         headers: { "x-csrf-token": csrf.csrfToken },
         body: JSON.stringify({
           resetSecret: values.get("resetSecret"),
-          email: values.get("email"),
+          email,
           password
         })
       });
