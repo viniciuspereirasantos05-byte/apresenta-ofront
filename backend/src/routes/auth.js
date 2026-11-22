@@ -49,10 +49,13 @@ function publicUser(user) {
   };
 }
 
-router.get("/csrf", (req, res) => {
+router.get("/csrf", (req, res, next) => {
   if (!req.session.csrfToken) req.session.csrfToken = createCsrfToken();
   res.set("Cache-Control", "no-store");
-  res.status(200).json({ csrfToken: req.session.csrfToken });
+  req.session.save((error) => {
+    if (error) return next(error);
+    return res.status(200).json({ csrfToken: req.session.csrfToken });
+  });
 });
 
 router.post("/register", authLimiter, requireCsrf, async (req, res, next) => {
