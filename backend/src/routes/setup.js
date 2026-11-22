@@ -128,7 +128,7 @@ router.post("/reset-admin-password", resetLimiter, requireCsrf, async (req, res,
   if (!secretMatches(providedSecret, resetSecret)) {
     return res.status(403).json({ error: "Código de recuperação inválido." });
   }
-  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: "Informe um e-mail válido." });
   }
   if (password.length < 12 || password.length > 128) {
