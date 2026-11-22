@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101510">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Configuração inicial | Kennedy Labs</title>
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+  <script src="./js/config.js" defer></script>
+  <script src="./js/setup.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brand-mark">K</span><span>Kennedy <strong>Labs</strong></span></a>
+    <span class="environment">Configuração protegida</span>
+  </header>
+  <main class="auth-layout">
+    <section class="intro-panel">
+      <p class="eyebrow">PRIMEIRO ACESSO</p>
+      <h1>Vamos preparar a administração.</h1>
+      <p class="intro">Crie a primeira conta administrativa do Kennedy Labs. Esta página só funciona enquanto a configuração inicial estiver habilitada no servidor.</p>
+    </section>
+    <section class="auth-card">
+      <h2 style="margin:0 0 8px">Criar primeiro administrador</h2>
+      <p class="form-help">Use um e-mail válido e uma senha forte com pelo menos 12 caracteres.</p>
+      <div id="setup-notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <form id="setup-form">
+        <label for="setup-secret">Código de configuração (ADMIN_SETUP_SECRET)</label>
+        <input id="setup-secret" name="setupSecret" type="password" autocomplete="off" required>
+        <label for="full-name">Nome completo</label>
+        <input id="full-name" name="fullName" type="text" minlength="3" maxlength="140" autocomplete="name" required>
+        <label for="email">E-mail do administrador</label>
+        <input id="email" name="email" type="email" maxlength="254" autocomplete="email" required>
+        <label for="password">Criar senha</label>
+        <input id="password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+        <label for="password-confirm">Confirmar senha</label>
+        <input id="password-confirm" name="passwordConfirm" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+        <button id="setup-submit" class="primary-button" type="submit">Criar administrador</button>
+      </form>
+      <p class="security-note">O código secreto é enviado diretamente à API e não é salvo nesta página.</p>
+    </section>
+  </main>
+  <footer>Kennedy Labs · Configuração inicial</footer>
+</body>
+</html>
