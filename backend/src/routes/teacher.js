@@ -62,6 +62,15 @@ router.get("/class-groups", async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
+
+router.get("/subjects", async (_req, res, next) => {
+  try {
+    const result = await pool.query("SELECT id, name FROM subjects WHERE active = TRUE ORDER BY name");
+    res.set("Cache-Control", "no-store");
+    return res.json({ subjects: result.rows });
+  } catch (error) { next(error); }
+});
+
 router.get("/periods", async (_req, res, next) => {
   try {
     const result = await pool.query(
@@ -171,14 +180,14 @@ router.get("/timetable",async(req,res,next)=>{try{
 }catch(e){next(e);}});
 router.post("/timetable/change-requests",requireCsrf,async(req,res,next)=>{
  const entries=req.body?.entries,message=String(req.body?.message||"").trim();
- if(!Array.isArray(entries)||entries.length>60||entries.some(x=>!x||typeof x!=="object"||!Number.isInteger(x.weekday)||x.weekday<1||x.weekday>5))return res.status(400).json({error:"Envie uma grade válida, com no máximo 60 aulas de segunda a sexta."});
+ if(!Array.isArray(entries)||entries.length<1||entries.length>60||entries.some(x=>!x||typeof x!=="object"||!Number.isInteger(x.weekday)||x.weekday<1||x.weekday>5||!UUID_PATTERN.test(String(x.classGroupId||""))||!UUID_PATTERN.test(String(x.subjectId||""))||!UUID_PATTERN.test(String(x.lessonPeriodId||""))))return res.status(400).json({error:"Envie uma grade válida, com no máximo 60 aulas de segunda a sexta."});
  try{
   const pending=await pool.query("SELECT id FROM timetable_change_requests WHERE teacher_id=$1 AND status='pending' LIMIT 1",[req.session.user.id]);
   if(pending.rowCount)return res.status(409).json({error:"Você já possui uma solicitação aguardando análise da secretaria."});
   const r=await pool.query("INSERT INTO timetable_change_requests(teacher_id,proposed_entries,message) VALUES($1,$2::jsonb,$3) RETURNING id,created_at",[req.session.user.id,JSON.stringify(entries),message.slice(0,500)||null]);
   await pool.query("INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id) VALUES($1,'timetable.change_requested','timetable_change_request',$2)",[req.session.user.id,r.rows[0].id]);
   return res.status(201).json({message:"Solicitação enviada à secretaria para aprovação.",request:r.rows[0]});
- }catch(e){next(e);}
+ }catch(e){if(e.code==="23505")return res.status(409).json({error:"Você já possui uma solicitação de alteração aguardando análise."});next(e);}
 });
 
 router.post("/reservations", requireCsrf, async (req, res, next) => {
