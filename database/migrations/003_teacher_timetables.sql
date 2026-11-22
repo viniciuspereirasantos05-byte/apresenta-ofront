@@ -27,3 +27,5 @@ CREATE TABLE timetable_change_requests (
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX timetable_change_requests_pending_idx ON timetable_change_requests (created_at) WHERE status = 'pending';
+
+CREATE UNIQUE INDEX timetable_change_requests_one_pending_per_teacher_uq ON timetable_change_requests (teacher_id) WHERE status = 'pending';
