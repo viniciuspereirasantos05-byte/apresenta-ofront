@@ -181,7 +181,7 @@ router.post("/notifications/:notificationId/read", requireCsrf, async (req, res,
 
 
 router.get("/timetable",async(req,res,next)=>{try{
- const r=await pool.query("SELECT t.id,t.weekday,cg.name AS class_group_name,s.name AS subject_name,p.period_number,p.shift,p.starts_at,p.ends_at FROM teacher_timetable_entries t JOIN class_groups cg ON cg.id=t.class_group_id JOIN subjects s ON s.id=t.subject_id JOIN lesson_periods p ON p.id=t.lesson_period_id WHERE t.teacher_id=$1 AND t.active=TRUE ORDER BY t.weekday,p.starts_at",[req.session.user.id]);
+ const r=await pool.query("SELECT t.id,t.weekday,t.class_group_id,t.subject_id,t.lesson_period_id,cg.name AS class_group_name,s.name AS subject_name,p.period_number,p.shift,p.starts_at,p.ends_at FROM teacher_timetable_entries t JOIN class_groups cg ON cg.id=t.class_group_id JOIN subjects s ON s.id=t.subject_id JOIN lesson_periods p ON p.id=t.lesson_period_id WHERE t.teacher_id=$1 AND t.active=TRUE ORDER BY t.weekday,p.starts_at",[req.session.user.id]);
  return res.json({entries:r.rows});
 }catch(e){next(e);}});
 router.post("/timetable/change-requests",requireCsrf,async(req,res,next)=>{
