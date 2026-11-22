@@ -95,7 +95,8 @@ app.use((req, res) => {
 });
 
 app.use((err, _req, res, next) => {
-  console.error("Erro na API:", err.message);\n  if (res.headersSent) return next(err);
+  console.error("Erro na API:", err.message);
+  if (res.headersSent) return next(err);
   if (err.message === "Origem não permitida pelo CORS.") {
     return res.status(403).json({ error: "Origem não permitida." });
   }
