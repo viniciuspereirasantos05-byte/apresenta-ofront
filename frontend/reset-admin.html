@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101510">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Recuperação administrativa | Kennedy Labs</title>
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+  <script src="./js/config.js" defer></script>
+  <script src="./js/reset-admin.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brand-mark">K</span><span>Kennedy <strong>Labs</strong></span></a>
+    <span class="environment">Recuperação protegida</span>
+  </header>
+  <main class="auth-layout">
+    <section class="intro-panel">
+      <p class="eyebrow">ACESSO ADMINISTRATIVO</p>
+      <h1>Recuperar acesso.</h1>
+      <p class="intro">Use esta página somente durante a recuperação temporária da conta administrativa. Após redefinir a senha, o código deverá ser removido do servidor.</p>
+    </section>
+    <section class="auth-card">
+      <h2 style="margin:0 0 8px">Redefinir senha do administrador</h2>
+      <p class="form-help">Informe o e-mail da conta administrativa e crie uma senha com pelo menos 12 caracteres.</p>
+      <div id="reset-notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <form id="reset-form">
+        <label for="reset-secret">Código temporário de recuperação</label>
+        <input id="reset-secret" name="resetSecret" type="password" autocomplete="off" required>
+        <label for="email">E-mail da conta administrativa</label>
+        <input id="email" name="email" type="email" maxlength="254" autocomplete="email" required>
+        <label for="password">Nova senha</label>
+        <input id="password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+        <label for="password-confirm">Confirmar nova senha</label>
+        <input id="password-confirm" name="passwordConfirm" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+        <button id="reset-submit" class="primary-button" type="submit">Redefinir senha</button>
+      </form>
+      <p class="security-note">Não compartilhe o código temporário. Ele é enviado diretamente à API e não fica salvo nesta página.</p>
+    </section>
+  </main>
+  <footer>Kennedy Labs · Recuperação administrativa</footer>
+</body>
+</html>
