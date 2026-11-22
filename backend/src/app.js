@@ -15,7 +15,7 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
-const sameSite = (process.env.SESSION_COOKIE_SAME_SITE || "lax").toLowerCase();
+const sameSite = (process.env.SESSION_COOKIE_SAME_SITE || (isProduction ? "none" : "lax")).toLowerCase();
 
 if (!["lax", "strict", "none"].includes(sameSite)) {
   throw new Error("SESSION_COOKIE_SAME_SITE deve ser lax, strict ou none.");
