@@ -79,7 +79,15 @@
           label.append(reason);
         } else if (period.reserved) {
           const reason = document.createElement("small");
-          reason.textContent = "Já reservado";
+          reason.textContent = "Espaço já reservado";
+          label.append(reason);
+        } else if (period.teacher_reserved || period.class_reserved) {
+          const reason = document.createElement("small");
+          reason.textContent = "Professor ou turma já possui reserva";
+          label.append(reason);
+        } else if (!period.teacher_eligible) {
+          const reason = document.createElement("small");
+          reason.textContent = "Não consta na sua grade";
           label.append(reason);
         }
         grid.append(label);
