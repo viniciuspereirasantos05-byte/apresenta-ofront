@@ -91,7 +91,7 @@ router.get("/availability", async (req, res, next) => {
       "AND rs.is_active = TRUE AND r.status = 'confirmed') AS reserved, " +
       "EXISTS (SELECT 1 FROM calendar_blocks cb WHERE cb.block_date = $2 " +
       "AND (cb.space_id IS NULL OR cb.space_id = $1) " +
-      "AND (cb.lesson_period_id IS NULL OR cb.lesson_period_id = p.id)) AS blocked " +
+      "AND (cb.lesson_period_id IS NULL OR cb.lesson_period_id = p.id)) AS blocked, " +
       "EXISTS (SELECT 1 FROM teacher_timetable_entries tt WHERE tt.teacher_id = $3 AND tt.class_group_id = $4 " +
       "AND tt.lesson_period_id = p.id AND tt.weekday = EXTRACT(ISODOW FROM $2::date)::int AND tt.active = TRUE) AS teacher_eligible " +
       "FROM lesson_periods p WHERE p.active = TRUE " +
