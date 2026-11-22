@@ -1,5 +1,6 @@
 (() => {
   const config = window.KENNEDY_CONFIG || {};
+  const $ = (selector) => document.querySelector(selector);
   const apiBase = String(config.API_BASE_URL || "").replace(/\/$/, "");
   const list = document.querySelector("#pending-list");
   const notice = document.querySelector("#dashboard-notice");
