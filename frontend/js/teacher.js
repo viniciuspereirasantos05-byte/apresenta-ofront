@@ -158,6 +158,131 @@
       });
     } catch (error) { container.textContent = error.message; }
   }
+
+  let timetableOptions = { classes: [], subjects: [], periods: [] };
+  let currentTimetable = [];
+  let timetableDraft = [];
+  let timetableRequestPending = false;
+
+  function createDraftSelect(items, value, labelFor) {
+    const select = document.createElement("select");
+    select.required = true;
+    addOption(select, "", "Selecione");
+    items.forEach((item) => addOption(select, item.id, labelFor(item)));
+    select.value = value || "";
+    return select;
+  }
+
+  function renderTimetableDraft() {
+    const container = $("#timetable-draft");
+    container.replaceChildren();
+    if (!timetableDraft.length) {
+      const empty = document.createElement("p");
+      empty.className = "form-help";
+      empty.textContent = "Nenhuma aula na proposta. Adicione as aulas da semana inteira.";
+      container.append(empty);
+      return;
+    }
+    const days = ["", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
+    timetableDraft.forEach((entry, index) => {
+      const row = document.createElement("div");
+      row.className = "timetable-draft-row";
+      const day = document.createElement("select");
+      day.setAttribute("aria-label", "Dia da semana");
+      addOption(day, "", "Dia");
+      days.slice(1).forEach((name, i) => addOption(day, String(i + 1), name));
+      day.value = String(entry.weekday || "");
+      const group = createDraftSelect(timetableOptions.classes, entry.classGroupId, item => item.name);
+      group.setAttribute("aria-label", "Turma");
+      const subject = createDraftSelect(timetableOptions.subjects, entry.subjectId, item => item.name);
+      subject.setAttribute("aria-label", "Matéria");
+      const period = createDraftSelect(timetableOptions.periods, entry.lessonPeriodId,
+        item => (item.shift === "morning" ? "Manhã" : item.shift === "afternoon" ? "Tarde" : "Noite") + " · " + item.period_number + "ª aula (" + formatTime(item.starts_at) + "–" + formatTime(item.ends_at) + ")");
+      period.setAttribute("aria-label", "Horário");
+      day.addEventListener("change", () => { timetableDraft[index].weekday = Number(day.value); });
+      group.addEventListener("change", () => { timetableDraft[index].classGroupId = group.value; });
+      subject.addEventListener("change", () => { timetableDraft[index].subjectId = subject.value; });
+      period.addEventListener("change", () => { timetableDraft[index].lessonPeriodId = period.value; });
+      const remove = document.createElement("button");
+      remove.type = "button"; remove.className = "secondary-button"; remove.textContent = "Remover";
+      remove.addEventListener("click", () => { timetableDraft.splice(index, 1); renderTimetableDraft(); });
+      row.append(day, group, subject, period, remove);
+      container.append(row);
+    });
+  }
+
+  function copyCurrentTimetable() {
+    timetableDraft = currentTimetable.map(entry => ({
+      weekday: entry.weekday,
+      classGroupId: entry.class_group_id,
+      subjectId: entry.subject_id,
+      lessonPeriodId: entry.lesson_period_id
+    }));
+    renderTimetableDraft();
+  }
+
+  async function loadTimetableRequestOptions() {
+    const [classes, subjects, periods] = await Promise.all([
+      request("/api/teacher/class-groups"),
+      request("/api/teacher/subjects"),
+      request("/api/teacher/periods")
+    ]);
+    timetableOptions = { classes: classes.classGroups, subjects: subjects.subjects, periods: periods.periods };
+  }
+
+  async function loadTimetable() {
+    const container = $("#teacher-timetable-list");
+    if (!container) return;
+    try {
+      const data = await request("/api/teacher/timetable");
+      currentTimetable = data.entries;
+      container.replaceChildren();
+      if (!data.entries.length) {
+        const empty = document.createElement("p"); empty.className = "form-help";
+        empty.textContent = "Sua grade ainda não foi cadastrada pela secretaria. Você pode montar uma proposta abaixo para enviar à secretaria.";
+        container.append(empty);
+      } else {
+        const days = ["", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
+        data.entries.forEach((entry) => {
+          const line = document.createElement("p"); line.className = "timetable-line";
+          line.textContent = days[entry.weekday] + " · " + entry.period_number + "ª aula (" + formatTime(entry.starts_at) + "–" + formatTime(entry.ends_at) + ") · " + entry.class_group_name + " · " + entry.subject_name;
+          container.append(line);
+        });
+      }
+      await loadTimetableRequestOptions();
+    } catch (error) { container.textContent = error.message; }
+  }
+
+  $("#add-timetable-entry").addEventListener("click", () => {
+    timetableDraft.push({ weekday: 1, classGroupId: "", subjectId: "", lessonPeriodId: "" });
+    renderTimetableDraft();
+  });
+  $("#copy-current-timetable").addEventListener("click", copyCurrentTimetable);
+  $("#submit-timetable-request").addEventListener("click", async () => {
+    const status = $("#timetable-request-status");
+    if (timetableRequestPending) return;
+    if (!timetableDraft.length || timetableDraft.some(entry => !entry.weekday || !entry.classGroupId || !entry.subjectId || !entry.lessonPeriodId)) {
+      status.textContent = "Preencha todos os campos de cada aula antes de enviar.";
+      return;
+    }
+    if (!window.confirm("A proposta enviada representa sua grade semanal completa. Se aprovada, substituirá a grade atual. Deseja continuar?")) return;
+    timetableRequestPending = true;
+    const button = $("#submit-timetable-request"); button.disabled = true; status.textContent = "Enviando...";
+    try {
+      await refreshCsrf();
+      const result = await request("/api/teacher/timetable/change-requests", {
+        method: "POST",
+        headers: { "x-csrf-token": csrfToken },
+        body: JSON.stringify({ entries: timetableDraft, message: $("#timetable-request-message").value })
+      });
+      status.textContent = result.message + " A grade atual continua valendo até a aprovação.";
+      $("#submit-timetable-request").disabled = true;
+    } catch (error) {
+      status.textContent = error.message;
+      timetableRequestPending = false; button.disabled = false;
+    }
+  });
+
   async function loadNotifications() {
     const container = $("#notification-list");
     container.textContent = "Carregando avisos...";
