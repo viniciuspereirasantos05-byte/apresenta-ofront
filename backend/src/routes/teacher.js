@@ -73,8 +73,8 @@ router.get("/periods", async (_req, res, next) => {
 });
 
 router.get("/availability", async (req, res, next) => {
-  const { date, spaceId } = req.query;
-  if (!validDate(date) || !UUID_PATTERN.test(String(spaceId || ""))) {
+  const { date, spaceId, classGroupId } = req.query;
+  if (!validDate(date) || !UUID_PATTERN.test(String(spaceId || "")) || !UUID_PATTERN.test(String(classGroupId || ""))) {
     return res.status(400).json({ error: "Informe uma data e um espaço válidos." });
   }
   try {
@@ -92,14 +92,16 @@ router.get("/availability", async (req, res, next) => {
       "EXISTS (SELECT 1 FROM calendar_blocks cb WHERE cb.block_date = $2 " +
       "AND (cb.space_id IS NULL OR cb.space_id = $1) " +
       "AND (cb.lesson_period_id IS NULL OR cb.lesson_period_id = p.id)) AS blocked " +
+      "EXISTS (SELECT 1 FROM teacher_timetable_entries tt WHERE tt.teacher_id = $3 AND tt.class_group_id = $4 " +
+      "AND tt.lesson_period_id = p.id AND tt.weekday = EXTRACT(ISODOW FROM $2::date)::int AND tt.active = TRUE) AS teacher_eligible " +
       "FROM lesson_periods p WHERE p.active = TRUE " +
       "ORDER BY CASE p.shift WHEN 'morning' THEN 1 WHEN 'afternoon' THEN 2 ELSE 3 END, p.period_number",
-      [spaceId, date]
+      [spaceId, date, req.session.user.id, classGroupId]
     );
     res.set("Cache-Control", "no-store");
     return res.json({
       date, spaceId,
-      periods: result.rows.map((period) => ({ ...period, available: !period.reserved && !period.blocked }))
+      periods: result.rows.map((period) => ({ ...period, available: !period.reserved && !period.blocked && period.teacher_eligible }))
     });
   } catch (error) { next(error); }
 });
@@ -244,6 +246,16 @@ router.post("/reservations", requireCsrf, async (req, res, next) => {
       return res.status(409).json({ error: "Um ou mais períodos estão bloqueados pela administração." });
     }
 
+    const timetable = await client.query(
+      "SELECT COUNT(DISTINCT lesson_period_id)::int AS matched FROM teacher_timetable_entries " +
+      "WHERE teacher_id = $1 AND class_group_id = $2 AND weekday = EXTRACT(ISODOW FROM $3::date)::int " +
+      "AND lesson_period_id = ANY($4::uuid[]) AND active = TRUE",
+      [req.session.user.id, classGroupId, date, periodIds]
+    );
+    if (timetable.rows[0].matched !== periodIds.length) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Sua grade oficial não confirma aula com essa turma em todos os períodos selecionados. Confira sua grade ou fale com a secretaria." });
+    }
     const reservation = await client.query(
       "INSERT INTO reservations (teacher_id, class_group_id, purpose, status) " +
       "VALUES ($1, $2, $3, 'confirmed') RETURNING id, created_at",
